@@ -14,13 +14,12 @@ using UnityEngine.Tilemaps;
 [RequireComponent(typeof(Tilemap))]
 public class RoomTileLayerTag : MonoBehaviour {
     /// <summary>
-    /// Indicates whether this tile layer is a wall layer.
-    /// Wall layers are treated as solid and will be cleared in overlapping
+    /// Indicates whether this tile layer is a solid layer.
+    /// Blocking tiles like walls or floors are treated as solid and will be cleared in overlapping
     /// regions where doors are placed.
-    /// Non-wall layers (e.g. background, decorations) are left untouched, even
-    /// if a door overlaps them.
+    /// Non-solid layers (e.g. background, decorations) are left untouched, even if a door overlaps them.
     /// </summary>
-    [Tooltip("If true, this layer is considered a wall and will be cleared in door regions to open passages.\n" +
+    [Tooltip("If true, this layer is considered a wall/floor and will be cleared in door regions to open passages.\n" +
              "If false, the layer is left untouched even if it overlaps with doors.")]
-    public bool LayerIsWall;
+    public bool LayerIsSolid;
 }

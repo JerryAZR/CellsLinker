@@ -196,11 +196,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38e7b12fa61147c40b0e7f6d45035faa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Doors:
-  - LocalPosition: {x: 0, y: 0}
-    Edge: 0
-    Directionality: 0
-    Width: 3
+  Doors: []
 --- !u!1 &8955070314146664533
 GameObject:
   m_ObjectHideFlags: 0

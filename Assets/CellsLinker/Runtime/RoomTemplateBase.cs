@@ -1,32 +1,44 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using Unity.VisualScripting;
+
 
 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-namespace CellsLinker.Runtime {
+namespace CellsLinker.Runtime
+{
 
     [RequireComponent(typeof(Grid))]
-    public class RoomTemplateBase : MonoBehaviour {
+    public class RoomTemplateBase : MonoBehaviour
+    {
 
         [Tooltip("List of doors in this room prefab. Each door should point outward to where the connecting room would be.")]
         public List<RoomDoor> Doors = new();
+        public RectInt RoomRect => _roomRect;
+        [SerializeField, HideInInspector]
+        private RectInt _roomRect;
+
+        // [Header("Gizmos Configs")]
+        // Texture
 
         /// <summary>
         ///
         /// </summary>
         /// <returns></returns>
-        private (BoundsInt bounds, HashSet<Vector2Int> walls) GetRoomBounds() {
+        private RectInt GetRoomRect()
+        {
             BoundsInt combinedBounds = default;
-            HashSet<Vector2Int> wallCells = new();
 
             // Search in immediate children for RoomTileLayers tagged as walls
-            foreach (Transform child in transform) {
+            foreach (Transform child in transform)
+            {
                 var tag = child.GetComponent<RoomTileLayerTag>();
-                if (tag != null && tag.LayerIsWall) {
+                if (tag != null && tag.LayerIsSolid)
+                {
                     // Tilemaps are guaranteed to exist with RoomTileLayerTag
                     var tilemap = child.GetComponent<Tilemap>();
                     // Compress bounds before using
@@ -35,107 +47,100 @@ namespace CellsLinker.Runtime {
 
                     BoundsInt layerBounds = tilemap.cellBounds;
                     combinedBounds = MergeBounds(combinedBounds, layerBounds);
-
-                    foreach (Vector3Int pos in layerBounds.allPositionsWithin) {
-                        if (tilemap.HasTile(pos)) {
-                            wallCells.Add((Vector2Int)pos);
-                        }
-                    }
                 }
             }
 
-            return (combinedBounds, wallCells);
+            Vector2Int roomMax, roomMin;
+            if (combinedBounds.size != Vector3Int.zero)
+            {
+                // Offset roomMax by one to "exclude" max row and column
+                roomMax = (Vector2Int)combinedBounds.max - Vector2Int.one;
+                roomMin = (Vector2Int)combinedBounds.min;
+            }
+            else
+            {
+                roomMax = new Vector2Int(int.MinValue, int.MinValue);
+                roomMin = new Vector2Int(int.MaxValue, int.MaxValue);
+            }
+
+            foreach (RoomDoor door in Doors)
+            {
+                Vector2Int doorMax = door.LocalPosition + (door.Width - 1) * (
+                    (door.Edge == DoorEdge.East || door.Edge == DoorEdge.West) ?
+                    Vector2Int.up : Vector2Int.right);
+                roomMin = Vector2Int.Min(roomMin, door.LocalPosition);
+                roomMax = Vector2Int.Max(roomMax, doorMax);
+            }
+
+            RectInt rect = new();
+            rect.SetMinMax(roomMin, roomMax);
+
+            return rect;
         }
 
-        private BoundsInt MergeBounds(BoundsInt bounds1, BoundsInt bounds2) {
-            if (bounds1.size != Vector3Int.zero && bounds2.size != Vector3Int.zero) {
+        private BoundsInt MergeBounds(BoundsInt bounds1, BoundsInt bounds2)
+        {
+            if (bounds1.size != Vector3Int.zero && bounds2.size != Vector3Int.zero)
+            {
                 // Regular non-zero case, most common
                 Vector3Int maxPoint = Vector3Int.Max(bounds1.max, bounds2.max);
                 Vector3Int minPoint = Vector3Int.Min(bounds1.min, bounds2.min);
                 BoundsInt newBounds = new();
                 newBounds.SetMinMax(minPoint, maxPoint);
                 return newBounds;
-            } else if (bounds1.size == Vector3Int.zero && bounds2.size == Vector3Int.zero) {
+            }
+            else if (bounds1.size == Vector3Int.zero && bounds2.size == Vector3Int.zero)
+            {
                 // Both zero, return default
                 return default;
-            } else if (bounds1.size == Vector3Int.zero) {
+            }
+            else if (bounds1.size == Vector3Int.zero)
+            {
                 return bounds2;
-            } else {
+            }
+            else
+            {
                 return bounds1;
             }
         }
 
-#if UNITY_EDITOR
-        private void OnDrawGizmosSelected() {
-            foreach (var door in Doors) {
-                DrawDoor(door);
-            }
-        }
-
-        private void DrawDoor(RoomDoor door) {
-            Grid grid = GetComponentInParent<Grid>();
-            if (grid == null) {
-                Debug.LogWarning("Grid not found for RoomTemplateBase");
-                return;
-            }
-
-            // Draw each tile in the door area
-            Vector3 growDirection = door.Edge switch {
-                DoorEdge.East => Vector3.up,
-                DoorEdge.West => Vector3.up,
-                DoorEdge.North => Vector3.right,
-                DoorEdge.South => Vector3.right,
-                _ => throw new System.InvalidOperationException($"Unknown DoorEdge enum: {door.Edge}"),
+        public bool IsDoorValid(RoomDoor door)
+        {
+            return door.Edge switch
+            {
+                DoorEdge.North => door.LocalPosition.y == RoomRect.yMax,
+                DoorEdge.East => door.LocalPosition.x == RoomRect.xMax,
+                DoorEdge.South => door.LocalPosition.y == RoomRect.yMin,
+                DoorEdge.West => door.LocalPosition.x == RoomRect.xMin,
+                _ => throw new UnexpectedEnumValueException<DoorEdge>(door.Edge),
             };
-            Vector3 anchorWorldPos = grid.GetCellCenterWorld((Vector3Int)door.LocalPosition);
-            Vector3 doorCenter = anchorWorldPos + growDirection * 0.5f * (door.Width - 1);
-            Vector3 doorSize = door.Edge == DoorEdge.East || door.Edge == DoorEdge.West ?
-                Vector3.Scale(grid.cellSize, new Vector3(1, door.Width, 0)) :
-                Vector3.Scale(grid.cellSize, new Vector3(door.Width, 1, 0));
-
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireCube(doorCenter, doorSize * 0.9f);
-
-            // Draw a circle to highight the anchor cell
-            Gizmos.color = Color.red;
-            Gizmos.DrawSphere(anchorWorldPos, 0.25f);
-
-            switch (door.Directionality) {
-                case DoorDirectionality.Bidirectional:
-                    DrawArrow(doorCenter, door.Edge.AsVectorInt());
-                    DrawArrow(doorCenter, -door.Edge.AsVectorInt());
-                    break;
-                case DoorDirectionality.EntranceOnly:
-                    DrawArrow(doorCenter, -door.Edge.AsVectorInt());
-                    break;
-                case DoorDirectionality.ExitOnly:
-                    DrawArrow(doorCenter, door.Edge.AsVectorInt());
-                    break;
-            }
         }
 
-        private void DrawArrow(Vector3 origin, Vector2Int dir) {
-            Handles.color = Color.cyan;
-            Vector3 dir3 = new(dir.x, dir.y, 0);
-            Handles.ArrowHandleCap(0, origin, Quaternion.LookRotation(dir3, Vector3.up), 0.5f, EventType.Repaint);
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            _roomRect = GetRoomRect();
         }
 #endif
 
     }
-    public enum DoorDirectionality {
+    public enum DoorDirectionality
+    {
         Bidirectional,  // Normal door, can go both ways
         EntranceOnly,   // One-way entrance (from this room to the next)
         ExitOnly        // One-way exit (from previous room into this one)
     }
 
-    public enum DoorEdge {
+    public enum DoorEdge
+    {
         North = 0, // +Y
         East = 1,  // +X
         South = 2, // -Y
         West = 3   // -X
     }
 
-    public static class DoorUtils {
+    public static class DoorUtils
+    {
         private static readonly Vector2Int[] _edgeDirections = new[]
         {
             Vector2Int.up,    // North
@@ -151,7 +156,8 @@ namespace CellsLinker.Runtime {
     /// Represents a doorway in a room template. Used during level generation to connect rooms.
     /// </summary>
     [System.Serializable]
-    public class RoomDoor {
+    public class RoomDoor
+    {
         /// <summary>
         /// Position of the door in local prefab space (tile coordinates).
         /// </summary>
