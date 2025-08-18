@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using CellsLinker.Runtime;
+using CellsLinker.Runtime.ScriptableObjects;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
@@ -8,7 +9,7 @@ using UnityEngine;
 public static class RoomVisualizer
 {
     [DrawGizmo(GizmoType.Selected | GizmoType.NonSelected)]
-    public static void DrawGizmos(RoomTemplateBase room, GizmoType gizmoType)
+    public static void DrawRoomGizmos(RoomTemplateBase room, GizmoType gizmoType)
     {
         foreach (var door in room.Doors)
         {
@@ -18,6 +19,7 @@ public static class RoomVisualizer
         Gizmos.color = Color.white;
         Vector3 roomSize = new(room.RoomRect.size.x, room.RoomRect.size.y, 0);
         Gizmos.DrawWireCube(room.RoomRect.center + Vector2.one / 2, roomSize);
+        Handles.Label(room.RoomRect.center, $"Effective Size:\n{room.RoomRect.size}");
     }
 
     private static void DrawDoor(RoomTemplateBase room, RoomDoor door)

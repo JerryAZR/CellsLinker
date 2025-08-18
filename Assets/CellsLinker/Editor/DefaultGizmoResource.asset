@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 908368f5a218ad74d9a7fc988eefc4f7, type: 3}
   m_Name: DefaultGizmoResource
   m_EditorClassIdentifier: 
-  arrowUp: {fileID: 0}
-  arrowRight: {fileID: 0}
-  arrowDown: {fileID: 0}
-  arrowLeft: {fileID: 0}
-  arrowHorizontal: {fileID: 0}
-  arrowVertical: {fileID: 0}
-  door: {fileID: 0}
-  warning: {fileID: 0}
+  arrowUp: {fileID: 2800000, guid: c6aa8f9d559508a49949e1afca474618, type: 3}
+  arrowRight: {fileID: 2800000, guid: 1071eb9ed8c27894fa9f420feaa6ed5a, type: 3}
+  arrowDown: {fileID: 2800000, guid: 3fa2e8ed2ad141340b01f9a637c0fca0, type: 3}
+  arrowLeft: {fileID: 2800000, guid: b98b7307322c096498855338fb51efb1, type: 3}
+  arrowHorizontal: {fileID: 2800000, guid: c82ac9477c1b90742b884157899c6641, type: 3}
+  arrowVertical: {fileID: 2800000, guid: f60fe21ac56a3f542841ef29fad14b17, type: 3}
+  door: {fileID: 2800000, guid: 92d199234d48b1b4889da8d3565c7868, type: 3}
+  warning: {fileID: 2800000, guid: b447c159297de16459cb3dcd11bbbfca, type: 3}

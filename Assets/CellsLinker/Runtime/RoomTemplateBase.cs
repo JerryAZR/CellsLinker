@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using Unity.VisualScripting;
+using CellsLinker.Runtime.ScriptableObjects;
+
 
 
 
@@ -21,9 +23,6 @@ namespace CellsLinker.Runtime
         public RectInt RoomRect => _roomRect;
         [SerializeField, HideInInspector]
         private RectInt _roomRect;
-
-        // [Header("Gizmos Configs")]
-        // Texture
 
         /// <summary>
         ///

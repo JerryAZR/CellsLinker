@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using UnityEditor;
+using CellsLinker.Runtime.ScriptableObjects;
 #endif
 
 public static class GizmoResourceLoader
