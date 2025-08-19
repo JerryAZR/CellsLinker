@@ -35,6 +35,6 @@ namespace CellsLinker.Runtime {
         }
 
         public override string ToString() =>
-            $"Node({TemplateCollection.CollectionName}-{Id}, Children: {Children.Count})";
+            $"Node({TemplateCollection.name}-{Id}, Children: {Children.Count})";
     }
 }

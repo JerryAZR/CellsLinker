@@ -2,14 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using Unity.VisualScripting;
-using CellsLinker.Runtime.ScriptableObjects;
-
-
-
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace CellsLinker.Runtime
 {
@@ -20,6 +12,8 @@ namespace CellsLinker.Runtime
 
         [Tooltip("List of doors in this room prefab. Each door should point outward to where the connecting room would be.")]
         public List<RoomDoor> Doors = new();
+        [Tooltip("If this room can be mirrored/flipped horizontally")]
+        public bool AllowMirror;
         public RectInt RoomRect => _roomRect;
         [SerializeField, HideInInspector]
         private RectInt _roomRect;
@@ -130,12 +124,15 @@ namespace CellsLinker.Runtime
         ExitOnly        // One-way exit (from previous room into this one)
     }
 
+    /// <summary>
+    /// Note that (3 - edge) gives you the opposite edge
+    /// </summary>
     public enum DoorEdge
     {
         North = 0, // +Y
         East = 1,  // +X
-        South = 2, // -Y
-        West = 3   // -X
+        West = 2,   // -X
+        South = 3, // -Y
     }
 
     public static class DoorUtils
@@ -144,11 +141,12 @@ namespace CellsLinker.Runtime
         {
             Vector2Int.up,    // North
             Vector2Int.right, // East
+            Vector2Int.left,  // West
             Vector2Int.down,  // South
-            Vector2Int.left   // West
         };
 
         public static Vector2Int AsVectorInt(this DoorEdge edge) => _edgeDirections[(int)edge];
+        public static DoorEdge Opposite(this DoorEdge edge) => (DoorEdge)(3 - (int)edge);
     }
 
     /// <summary>

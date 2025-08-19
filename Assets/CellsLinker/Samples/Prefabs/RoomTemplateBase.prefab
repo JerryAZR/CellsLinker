@@ -197,6 +197,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Doors: []
+  AllowMirror: 1
   _roomRect:
     x: 0
     y: 0
